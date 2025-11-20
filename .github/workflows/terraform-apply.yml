@@ -1,0 +1,124 @@
+name: Terraform Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
+        
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      
+    - name: Terraform Init
+      run: |
+        cd terraform/environments/${{ github.event.inputs.environment }}
+        terraform init
+      env:
+        GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Terraform Plan
+      id: plan
+      run: |
+        cd terraform/environments/${{ github.event.inputs.environment }}
+        terraform plan -out=tfplan
+      env:
+        GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+        TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+        
+    - name: Terraform Apply
+      run: |
+        cd terraform/environments/${{ github.event.inputs.environment }}
+        terraform apply -auto-approve tfplan
+      env:
+        GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Get Cluster Info
+      run: |
+        cd terraform/environments/${{ github.event.inputs.environment }}
+        echo "========================================="
+        echo "GKE Cluster Information"
+        echo "========================================="
+        terraform output -json | jq '.'
+        echo ""
+        echo "========================================="
+        echo "Cluster Name: $(terraform output -raw cluster_name)"
+        echo "Cluster Endpoint: $(terraform output -raw cluster_endpoint)"
+        echo "Cluster Region: $(terraform output -raw cluster_region)"
+        echo "========================================="
+        
+    - name: Configure kubectl
+      run: |
+        CLUSTER_NAME=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_name)
+        CLUSTER_REGION=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_region)
+        gcloud container clusters get-credentials $CLUSTER_NAME \
+          --region=$CLUSTER_REGION \
+          --project=${{ secrets.GCP_PROJECT_ID }}
+        
+    - name: Verify Cluster
+      run: |
+        kubectl cluster-info
+        kubectl get nodes
+        kubectl get namespaces
+        
+    - name: Create Deployment Summary
+      run: |
+        cat >> $GITHUB_STEP_SUMMARY <<EOF
+        # 🚀 Infrastructure Deployed Successfully
+        
+        ## Environment: \`${{ github.event.inputs.environment }}\`
+        
+        ### Cluster Details
+        - **Cluster Name**: \`$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_name)\`
+        - **Region**: \`$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_region)\`
+        - **Endpoint**: \`$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_endpoint)\`
+        
+        ### Next Steps
+        1. Configure kubectl:
+        \`\`\`bash
+        gcloud container clusters get-credentials $(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_name) \\
+          --region=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_region) \\
+          --project=${{ secrets.GCP_PROJECT_ID }}
+        \`\`\`
+        
+        2. Verify cluster:
+        \`\`\`bash
+        kubectl get nodes
+        kubectl cluster-info
+        \`\`\`
+        
+        3. Deploy application using pickstream-app repository
+        
+        ---
+        *Deployed by: @${{ github.actor }}*
+        *Commit: \`${{ github.sha }}\`*
+        EOF

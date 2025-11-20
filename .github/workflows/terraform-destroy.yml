@@ -1,0 +1,139 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to destroy'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      confirm:
+        description: 'Type "destroy" to confirm'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  terraform-destroy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+    - name: Validate Confirmation
+      run: |
+        if [ "${{ github.event.inputs.confirm }}" != "destroy" ]; then
+          echo "❌ Confirmation failed. You must type 'destroy' to proceed."
+          exit 1
+        fi
+        echo "✅ Confirmation received. Proceeding with destruction..."
+        
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
+        
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      
+    - name: Terraform Init
+      run: |
+        cd terraform/environments/${{ github.event.inputs.environment }}
+        terraform init
+      env:
+        GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Terraform Plan Destroy
+      id: plan
+      run: |
+        cd terraform/environments/${{ github.event.inputs.environment }}
+        terraform plan -destroy -out=tfplan-destroy
+      env:
+        GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+        TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+        
+    - name: Terraform Destroy
+      run: |
+        cd terraform/environments/${{ github.event.inputs.environment }}
+        echo "========================================="
+        echo "🗑️  Destroying Infrastructure..."
+        echo "Environment: ${{ github.event.inputs.environment }}"
+        echo "========================================="
+        terraform apply -auto-approve tfplan-destroy
+        echo ""
+        echo "========================================="
+        echo "✅ Infrastructure Destroyed Successfully!"
+        echo "========================================="
+      env:
+        GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Cleanup Orphaned Resources
+      run: |
+        echo "========================================="
+        echo "🧹 Checking for orphaned resources..."
+        echo "========================================="
+        
+        # List any remaining GKE clusters
+        echo "Checking for GKE clusters..."
+        gcloud container clusters list --project=${{ secrets.GCP_PROJECT_ID }} || true
+        
+        # List any remaining compute instances
+        echo "Checking for compute instances..."
+        gcloud compute instances list --project=${{ secrets.GCP_PROJECT_ID }} || true
+        
+        # List any remaining load balancers
+        echo "Checking for load balancers..."
+        gcloud compute forwarding-rules list --project=${{ secrets.GCP_PROJECT_ID }} || true
+        
+        echo "========================================="
+        echo "✅ Cleanup check complete"
+        echo "========================================="
+      continue-on-error: true
+      
+    - name: Create Destruction Summary
+      run: |
+        cat >> $GITHUB_STEP_SUMMARY <<EOF
+        # 🗑️ Infrastructure Destroyed
+        
+        ## Environment: \`${{ github.event.inputs.environment }}\`
+        
+        ### Destruction Details
+        - **Triggered by**: @${{ github.actor }}
+        - **Timestamp**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        - **Commit**: \`${{ github.sha }}\`
+        
+        ### Resources Destroyed
+        - ✅ GKE Cluster
+        - ✅ Node Pools (System and Application)
+        - ✅ VPC Network and Subnets
+        - ✅ Firewall Rules
+        - ✅ Cloud NAT
+        - ✅ Service Accounts and IAM Bindings
+        
+        ### Verification
+        Run the following commands to verify all resources are deleted:
+        \`\`\`bash
+        # Check for remaining clusters
+        gcloud container clusters list --project=${{ secrets.GCP_PROJECT_ID }}
+        
+        # Check for remaining networks
+        gcloud compute networks list --project=${{ secrets.GCP_PROJECT_ID }}
+        \`\`\`
+        
+        ---
+        **⚠️ Note**: The Terraform state file is preserved in GCS for audit purposes.
+        EOF

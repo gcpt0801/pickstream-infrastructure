@@ -1,0 +1,19 @@
+# Example terraform.tfvars file
+# Copy this file and update with your values
+
+project_id   = "your-gcp-project-id"
+region       = "us-central1"
+cluster_name = "pickstream-cluster"
+environment  = "dev"
+
+# System node pool configuration
+system_node_count  = 2
+system_min_nodes   = 1
+system_max_nodes   = 3
+system_machine_type = "e2-medium"
+
+# Application node pool configuration
+app_node_count    = 3
+app_min_nodes     = 2
+app_max_nodes     = 5
+app_machine_type  = "e2-standard-2"

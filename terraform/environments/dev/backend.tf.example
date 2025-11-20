@@ -1,0 +1,9 @@
+# Example backend.tf file
+# Update the bucket name with your GCS bucket for Terraform state
+
+terraform {
+  backend "gcs" {
+    bucket = "your-terraform-state-bucket"
+    prefix = "dev/terraform/state"
+  }
+}
