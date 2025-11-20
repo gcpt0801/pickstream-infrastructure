@@ -37,12 +37,8 @@ resource "google_service_account" "workload_identity" {
   description  = "Service account for Kubernetes workloads using Workload Identity"
 }
 
-# Grant roles to workload identity service account
-resource "google_project_iam_member" "workload_identity_user" {
-  project = var.project_id
-  role    = "roles/iam.workloadIdentityUser"
-  member  = "serviceAccount:${var.project_id}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
-}
+# Note: Workload Identity bindings are commented out because they require the GKE cluster
+# to exist first. These should be configured after cluster creation or as part of app deployment.
 
 # Service account for Artifact Registry access
 resource "google_service_account" "artifact_registry" {
@@ -57,9 +53,5 @@ resource "google_project_iam_member" "artifact_registry_reader" {
   member  = "serviceAccount:${google_service_account.artifact_registry.email}"
 }
 
-# Bind Artifact Registry SA to Workload Identity
-resource "google_service_account_iam_member" "workload_identity_binding" {
-  service_account_id = google_service_account.artifact_registry.name
-  role               = "roles/iam.workloadIdentityUser"
-  member             = "serviceAccount:${var.project_id}.svc.id.goog[${var.kubernetes_namespace}/${var.kubernetes_service_account}]"
-}
+# Workload Identity bindings will be configured after cluster creation
+# These require the cluster's Workload Identity pool to exist first
