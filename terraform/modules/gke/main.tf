@@ -1,6 +1,6 @@
 resource "google_container_cluster" "primary" {
   name     = var.cluster_name
-  location = var.region
+  location = "${var.region}-a"  # Use zonal cluster instead of regional to reduce quota usage
 
   # We can't create a cluster with no node pool defined, but we want to only use
   # separately managed node pools. So we create the smallest possible default
@@ -91,7 +91,7 @@ resource "google_container_cluster" "primary" {
 # System node pool for system workloads
 resource "google_container_node_pool" "system_pool" {
   name       = "${var.cluster_name}-system-pool"
-  location   = var.region
+  location   = "${var.region}-a"
   cluster    = google_container_cluster.primary.name
   node_count = var.system_node_count
 
@@ -154,7 +154,7 @@ resource "google_container_node_pool" "system_pool" {
 # Application node pool for application workloads
 resource "google_container_node_pool" "app_pool" {
   name       = "${var.cluster_name}-app-pool"
-  location   = var.region
+  location   = "${var.region}-a"
   cluster    = google_container_cluster.primary.name
   node_count = var.app_node_count
 
