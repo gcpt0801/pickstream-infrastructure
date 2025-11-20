@@ -10,10 +10,10 @@ environment  = "dev"
 system_node_count  = 1
 system_min_nodes   = 1
 system_max_nodes   = 3
-system_machine_type = "e2-small"
+system_machine_type = "e2-medium"
 
 # Application node pool configuration
 app_node_count    = 1
 app_min_nodes     = 1
 app_max_nodes     = 5
-app_machine_type  = "e2-small"
+app_machine_type  = "e2-medium"
