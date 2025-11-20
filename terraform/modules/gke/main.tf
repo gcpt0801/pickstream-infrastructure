@@ -110,7 +110,7 @@ resource "google_container_node_pool" "system_pool" {
   # Node configuration
   node_config {
     machine_type = var.system_machine_type
-    disk_size_gb = 50
+    disk_size_gb = 30
     disk_type    = "pd-standard"
 
     # Service account
@@ -173,7 +173,7 @@ resource "google_container_node_pool" "app_pool" {
   # Node configuration
   node_config {
     machine_type = var.app_machine_type
-    disk_size_gb = 100
+    disk_size_gb = 30
     disk_type    = "pd-standard"
 
     # Service account
