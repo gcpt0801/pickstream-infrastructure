@@ -14,6 +14,11 @@ output "cluster_location" {
   value       = module.gke.cluster_location
 }
 
+output "cluster_region" {
+  description = "Region/Zone of the GKE cluster (for backward compatibility)"
+  value       = module.gke.cluster_location
+}
+
 output "network_name" {
   description = "Name of the VPC network"
   value       = module.networking.network_name
@@ -21,7 +26,7 @@ output "network_name" {
 
 output "kubectl_config_command" {
   description = "Command to configure kubectl"
-  value       = "gcloud container clusters get-credentials ${module.gke.cluster_name} --region=${var.region} --project=${var.project_id}"
+  value       = "gcloud container clusters get-credentials ${module.gke.cluster_name} --zone=${module.gke.cluster_location} --project=${var.project_id}"
 }
 
 output "workload_identity_service_account" {

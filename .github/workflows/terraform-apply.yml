@@ -79,9 +79,9 @@ jobs:
     - name: Configure kubectl
       run: |
         CLUSTER_NAME=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_name)
-        CLUSTER_REGION=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_region)
+        CLUSTER_LOCATION=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_location)
         gcloud container clusters get-credentials $CLUSTER_NAME \
-          --region=$CLUSTER_REGION \
+          --zone=$CLUSTER_LOCATION \
           --project=${{ secrets.GCP_PROJECT_ID }}
         
     - name: Verify Cluster
@@ -99,14 +99,14 @@ jobs:
         
         ### Cluster Details
         - **Cluster Name**: \`$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_name)\`
-        - **Region**: \`$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_region)\`
+        - **Location**: \`$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_location)\`
         - **Endpoint**: \`$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_endpoint)\`
         
         ### Next Steps
         1. Configure kubectl:
         \`\`\`bash
         gcloud container clusters get-credentials $(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_name) \\
-          --region=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_region) \\
+          --zone=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_location) \\
           --project=${{ secrets.GCP_PROJECT_ID }}
         \`\`\`
         
