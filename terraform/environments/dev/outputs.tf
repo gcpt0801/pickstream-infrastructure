@@ -24,6 +24,11 @@ output "network_name" {
   value       = module.networking.network_name
 }
 
+output "project_id" {
+  description = "GCP Project ID"
+  value       = var.project_id
+}
+
 output "kubectl_config_command" {
   description = "Command to configure kubectl"
   value       = "gcloud container clusters get-credentials ${module.gke.cluster_name} --zone=${module.gke.cluster_location} --project=${var.project_id}"

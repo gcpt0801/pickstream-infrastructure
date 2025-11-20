@@ -53,7 +53,6 @@ jobs:
         terraform plan -out=tfplan
       env:
         GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
-        TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
         
     - name: Terraform Apply
       run: |
@@ -80,9 +79,10 @@ jobs:
       run: |
         CLUSTER_NAME=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_name)
         CLUSTER_LOCATION=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_location)
+        PROJECT_ID=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw project_id)
         gcloud container clusters get-credentials $CLUSTER_NAME \
           --zone=$CLUSTER_LOCATION \
-          --project=${{ secrets.GCP_PROJECT_ID }}
+          --project=$PROJECT_ID
         
     - name: Verify Cluster
       run: |
@@ -107,7 +107,7 @@ jobs:
         \`\`\`bash
         gcloud container clusters get-credentials $(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_name) \\
           --zone=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw cluster_location) \\
-          --project=${{ secrets.GCP_PROJECT_ID }}
+          --project=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw project_id)
         \`\`\`
         
         2. Verify cluster:

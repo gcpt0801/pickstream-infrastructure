@@ -65,7 +65,6 @@ jobs:
         terraform plan -no-color -out=tfplan
       env:
         GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
-        TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
       continue-on-error: true
       
     - name: Create Plan Summary

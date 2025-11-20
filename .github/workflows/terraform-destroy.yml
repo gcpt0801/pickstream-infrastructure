@@ -64,7 +64,6 @@ jobs:
         terraform plan -destroy -out=tfplan-destroy
       env:
         GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
-        TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
         
     - name: Terraform Destroy
       run: |
@@ -87,17 +86,19 @@ jobs:
         echo "🧹 Checking for orphaned resources..."
         echo "========================================="
         
+        PROJECT_ID=$(cd terraform/environments/${{ github.event.inputs.environment }} && terraform output -raw project_id 2>/dev/null || echo "gcp-terraform-demo-474514")
+        
         # List any remaining GKE clusters
         echo "Checking for GKE clusters..."
-        gcloud container clusters list --project=${{ secrets.GCP_PROJECT_ID }} || true
+        gcloud container clusters list --project=$PROJECT_ID || true
         
         # List any remaining compute instances
         echo "Checking for compute instances..."
-        gcloud compute instances list --project=${{ secrets.GCP_PROJECT_ID }} || true
+        gcloud compute instances list --project=$PROJECT_ID || true
         
         # List any remaining load balancers
         echo "Checking for load balancers..."
-        gcloud compute forwarding-rules list --project=${{ secrets.GCP_PROJECT_ID }} || true
+        gcloud compute forwarding-rules list --project=$PROJECT_ID || true
         
         echo "========================================="
         echo "✅ Cleanup check complete"
@@ -128,10 +129,10 @@ jobs:
         Run the following commands to verify all resources are deleted:
         \`\`\`bash
         # Check for remaining clusters
-        gcloud container clusters list --project=${{ secrets.GCP_PROJECT_ID }}
+        gcloud container clusters list --project=gcp-terraform-demo-474514
         
         # Check for remaining networks
-        gcloud compute networks list --project=${{ secrets.GCP_PROJECT_ID }}
+        gcloud compute networks list --project=gcp-terraform-demo-474514
         \`\`\`
         
         ---
