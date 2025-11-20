@@ -38,3 +38,25 @@ output "workload_identity_service_account" {
   description = "Workload Identity service account email"
   value       = module.iam.workload_identity_service_account_email
 }
+
+# Artifact Registry outputs
+output "artifact_registry_url" {
+  description = "Artifact Registry repository URL"
+  value       = module.artifact_registry.repository_url
+}
+
+output "artifact_registry_location" {
+  description = "Artifact Registry location"
+  value       = module.artifact_registry.location
+}
+
+# Workload Identity outputs
+output "workload_identity_provider" {
+  description = "Workload Identity Provider for GitHub Actions"
+  value       = module.workload_identity.workload_identity_provider
+}
+
+output "github_service_account_email" {
+  description = "GitHub Actions service account email"
+  value       = module.iam.github_service_account_email
+}

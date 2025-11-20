@@ -24,3 +24,15 @@ variable "kubernetes_service_account" {
   type        = string
   default     = "pickstream-app"
 }
+
+variable "github_sa_name" {
+  description = "GitHub Actions service account name"
+  type        = string
+  default     = "gcp-terraform-demo"
+}
+
+variable "github_sa_display_name" {
+  description = "GitHub Actions service account display name"
+  type        = string
+  default     = "GitHub Actions Service Account"
+}

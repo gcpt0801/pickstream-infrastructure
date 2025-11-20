@@ -70,3 +70,15 @@ variable "app_machine_type" {
   type        = string
   default     = "e2-standard-2"
 }
+
+variable "github_repository" {
+  description = "GitHub repository for Workload Identity (owner/repo)"
+  type        = string
+  default     = "gcpt0801/pickstream-app"
+}
+
+variable "github_org" {
+  description = "GitHub organization/owner"
+  type        = string
+  default     = "gcpt0801"
+}

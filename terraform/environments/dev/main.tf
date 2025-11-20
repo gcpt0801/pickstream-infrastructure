@@ -62,3 +62,37 @@ module "gke" {
     module.iam
   ]
 }
+
+# Artifact Registry Module
+module "artifact_registry" {
+  source = "../../modules/artifact-registry"
+
+  project_id                = var.project_id
+  location                  = var.region
+  repository_id             = "pickstream"
+  gke_node_service_account  = module.iam.node_service_account_email
+  github_service_account    = module.iam.github_service_account_email
+
+  labels = {
+    environment = var.environment
+    managed_by  = "terraform"
+  }
+
+  depends_on = [
+    module.iam
+  ]
+}
+
+# Workload Identity Federation Module
+module "workload_identity" {
+  source = "../../modules/workload-identity"
+
+  project_id            = var.project_id
+  github_repository     = var.github_repository
+  service_account_name  = module.iam.github_service_account_name
+  attribute_condition   = "assertion.repository_owner == '${var.github_org}'"
+
+  depends_on = [
+    module.iam
+  ]
+}

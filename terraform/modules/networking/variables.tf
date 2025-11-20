@@ -35,3 +35,9 @@ variable "services_cidr" {
   type        = string
   default     = "10.8.0.0/20"
 }
+
+variable "loadbalancer_tags" {
+  description = "Network tags for LoadBalancer instances"
+  type        = list(string)
+  default     = ["gke-node"]
+}

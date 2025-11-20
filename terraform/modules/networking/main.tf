@@ -118,6 +118,22 @@ resource "google_compute_firewall" "allow_health_checks" {
   description = "Allow health checks from Google Cloud Load Balancers"
 }
 
+# Firewall rule: Allow HTTP/HTTPS traffic to LoadBalancer services
+resource "google_compute_firewall" "allow_loadbalancer_http" {
+  name    = "${var.network_name}-allow-loadbalancer-http"
+  network = google_compute_network.vpc_network.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "443"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = var.loadbalancer_tags
+
+  description = "Allow HTTP/HTTPS traffic to LoadBalancer services"
+}
+
 # Firewall rule: Deny all ingress by default (implicit deny)
 resource "google_compute_firewall" "deny_all_ingress" {
   name     = "${var.network_name}-deny-all-ingress"
