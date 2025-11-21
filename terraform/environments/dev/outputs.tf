@@ -34,11 +34,6 @@ output "kubectl_config_command" {
   value       = "gcloud container clusters get-credentials ${module.gke.cluster_name} --zone=${module.gke.cluster_location} --project=${var.project_id}"
 }
 
-output "workload_identity_service_account" {
-  description = "Workload Identity service account email"
-  value       = module.iam.workload_identity_service_account_email
-}
-
 # Artifact Registry outputs
 output "artifact_registry_url" {
   description = "Artifact Registry repository URL"
