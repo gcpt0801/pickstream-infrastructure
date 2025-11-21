@@ -56,23 +56,21 @@ resource "google_project_iam_member" "artifact_registry_reader" {
 # Workload Identity bindings will be configured after cluster creation
 # These require the cluster's Workload Identity pool to exist first
 
-# GitHub Actions Service Account
-resource "google_service_account" "github_actions" {
-  account_id   = var.github_sa_name
-  display_name = var.github_sa_display_name
-  description  = "Service account for GitHub Actions CI/CD"
-  project      = var.project_id
+# GitHub Actions Service Account (using existing one)
+data "google_service_account" "github_actions" {
+  account_id = var.github_sa_name
+  project    = var.project_id
 }
 
 # GitHub Actions IAM roles
 resource "google_project_iam_member" "github_artifact_registry" {
   project = var.project_id
   role    = "roles/artifactregistry.writer"
-  member  = "serviceAccount:${google_service_account.github_actions.email}"
+  member  = "serviceAccount:${data.google_service_account.github_actions.email}"
 }
 
 resource "google_project_iam_member" "github_container_developer" {
   project = var.project_id
   role    = "roles/container.developer"
-  member  = "serviceAccount:${google_service_account.github_actions.email}"
+  member  = "serviceAccount:${data.google_service_account.github_actions.email}"
 }
