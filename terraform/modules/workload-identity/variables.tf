@@ -6,7 +6,7 @@ variable "project_id" {
 variable "pool_id" {
   description = "Workload Identity Pool ID"
   type        = string
-  default     = "github-pool"
+  default     = "github-actions-pool"
 }
 
 variable "pool_display_name" {
@@ -24,7 +24,7 @@ variable "pool_description" {
 variable "provider_id" {
   description = "Workload Identity Provider ID"
   type        = string
-  default     = "github-provider"
+  default     = "github-actions-provider"
 }
 
 variable "provider_display_name" {
